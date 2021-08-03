@@ -1,4 +1,3 @@
-g++ -c engine3d/main.cpp -Iusr/include/SFMl
-g++ main.o -o engine3d/main -Lusr/include/SFML/lib -lsfml-graphics -lsfml-window -lsfml-system
-cd engine3d
+g++ -c main.cpp -I[sfml include path]
+g++ main.o -o main -L[sfml lib path] -lsfml-graphics -lsfml-window -lsfml-system
 ./main
