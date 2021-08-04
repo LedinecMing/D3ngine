@@ -10,7 +10,7 @@ int main()
     float PI = 3.14;
     float gradus = 0.0174;
     bool keysInfo[10] = {false, false, false, false, false, false};
-    sf::Vector3f camera = sf::Vector3f(-5.0, 0.0, 0.0);
+    sf::Vector3f camera = sf::Vector3f(-5.0, 0.0, 1.0);
     sf::Vector3f angle = sf::Vector3f(0.0, 0.0, 0.0);
     sf::RenderTexture emptyTexture;
     emptyTexture.create(w, h);
@@ -19,6 +19,14 @@ int main()
     sf::Shader shader;
     shader.loadFromFile("shader.frag", sf::Shader::Fragment);
     shader.setUniform("uni_resolution", sf::Vector2f(w,h));
+    int objects_num = 2;
+    const float speed = 0.5;
+    const float objects[objects_num*8]=
+    {
+        1, 5, 2, 0, 0.5, 1, 1, 1,
+        1, 2, 5, 0, 0.2, 1, 1, 1
+    };
+    shader.setUniformArray("objects", objects, objects_num);
     sf::RenderWindow window(sf::VideoMode(1600, 1200), "D3ngine", sf::Style::Fullscreen);
     window.setFramerateLimit(30);
     while (window.isOpen())
@@ -62,31 +70,31 @@ int main()
         }
         if (keysInfo[0])
         {
-            camera.x=camera.x+(0.1*cos( angle.x));
-            camera.y=camera.y+(0.1*sin( angle.x));
+            camera.x=camera.x+(speed*cos( angle.x));
+            camera.y=camera.y+(speed*sin( angle.x));
         }
         if (keysInfo[1])
         {
-            camera.x=camera.x+(-0.1*sin( angle.x));
-            camera.y=camera.y+(-0.1*cos( angle.x));
+            camera.x=camera.x+(-speed*sin( angle.x));
+            camera.y=camera.y+(-speed*cos( angle.x));
         }
         if (keysInfo[2])
         {
-            camera.x=camera.x+(-0.1*cos( angle.x));
-            camera.y=camera.y+(-0.1*sin( angle.x));
+            camera.x=camera.x+(-speed*cos( angle.x));
+            camera.y=camera.y+(-speed*sin( angle.x));
         }
         if (keysInfo[3])
         {
-            camera.x=camera.x+(0.1*sin( angle.x));
-            camera.y=camera.y+(0.1*cos( angle.x));
+            camera.x=camera.x+(speed*sin( angle.x));
+            camera.y=camera.y+(speed*cos( angle.x));
         }
         if (keysInfo[4])
         {
-            camera.z+=0.1;
+            camera.z+=speed;
         }
         if (keysInfo[5])
         {
-            camera.z-=0.1;
+            camera.z-=speed;
         }
         if (keysInfo[6])
         {
@@ -107,7 +115,6 @@ int main()
         window.clear();
         shader.setUniform("uni_time", clock.getElapsedTime().asSeconds());
         shader.setUniform("camera", camera);
-        //shader.setUniform("uni_angle", sf::Vector3f(( angle.x* 180 ) / PI, ( angle.y * 180 ) / PI, ( angle.z * 180 ) / PI));
         shader.setUniform("uni_angle", angle);
         window.draw(emptySprite, &shader);
         window.display();
