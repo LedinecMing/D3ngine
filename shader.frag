@@ -3,7 +3,7 @@ uniform vec2 uni_resolution;
 uniform float uni_time;
 uniform vec3 uni_angle;
 uniform vec3 camera;
-uniform float objects[24];
+uniform float objects[16];
 
 const float LIGHT_POWER = 8.0;
 
@@ -94,7 +94,7 @@ vec3 getObjectParameter(int parameter, int index, vec3 ro, vec3 rd, vec2 dist)
 	if ( parameter == NORMAL )
 	{
 		vec3 position = vec3(objects[index+POS], objects[index+POS+1], objects[index+POS+2]);
-		float type_form = objects[TYPE];
+		float type_form = objects[index*8+TYPE];
 		if ( type_form == 0 )
 		{
 			// Sphere normal
@@ -125,8 +125,8 @@ vec3 getMinDistObject(vec3 ro, vec3 rd)
 		vec3 objectColor = getObjectParameter(COLOR, i*OBJECT_LENGTH);
 
 		size = objects[i*OBJECT_LENGTH+SIZE];
-		formType = int(objects[i*OBJECT_LENGTH]);
-		/*if ( type_form==2 )
+		formType = int(objects[i*OBJECT_LENGTH+TYPE]);
+		 if ( formType==2 )
 		{
 			dist = vec2(plainIntersect(ro, rd, vec4(objectCoords, 1.0)));
 			if(dist.x > 0.0 && minDist.x>dist.x)
@@ -134,10 +134,10 @@ vec3 getMinDistObject(vec3 ro, vec3 rd)
 				minDist = dist;
 				index = i;
 			}
-		}*/
-		if ( formType==1 )
+		}
+		else if ( formType==1 )
 		{
-			dist = boxIntersection(ro-objectCoords, rd, vec3(0),  vec3(0.0));
+			dist = boxIntersection(ro-objectCoords, rd, vec3(size),  vec3(0.0));
 			if (dist.x > 0.0 && minDist.x > dist.x)
 			{
 				minDist = dist;
@@ -162,7 +162,7 @@ vec3 colorLight(vec3 color, vec3 normal, vec3 rd)
 	float diffuse = max(0.0, dot(light, normal)) * 0.5 + 0.2;
 	float specular = max(0.0, pow(dot(reflect(rd, normal), light), LIGHT_POWER));	
 
-	return vec3(color);
+	return (vec3(diffuse+specular)+color)/2;
 }
 vec3 rayCast(vec3 ro, vec3 rd)
 {
