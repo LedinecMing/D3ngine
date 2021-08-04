@@ -3,28 +3,48 @@ uniform vec2 uni_resolution;
 uniform float uni_time;
 uniform vec3 uni_angle;
 uniform vec3 camera;
-uniform float objects[16];
+uniform float objects[10];
+
+uniform float uni_sin[180];
+uniform float uni_cos[180];
 
 const float LIGHT_POWER = 8.0;
 
-const int OBJECT_LENGTH = 8;
+const int OBJECT_LENGTH = 10;
 const vec2 BASE_DIST = vec2(1000);
 // Object template vars indexes
 const int TYPE = 0;
 const int POS = 1;
 const int SIZE = 4;
-const int COLOR = 5;
+const int COLOR = 7;
 // Object vars not included in object template
 const int NORMAL = 69;
 
 bool cycle = true;
 bool is_init_hash = false;
 vec2 minDist = vec2(1000);
+float hashSin(float number)
+{
+	if (number-int(number)==0)
+	{ 
+		return uni_sin[int(number)%180];
+	}
+	return sin(number);
+}
+float hashCos(float number)
+{
+	if (number-int(number)==0)
+	{ 
+		return uni_cos[int(number)%180];
+	}
+	return cos(number);
+}
+
 vec3 getLight()
 {	
 	if ( cycle )
 	{
-		return vec3(cos(uni_time), 0.75, sin(uni_time));
+		return vec3(hashCos(uni_time), 0.75, hashSin(uni_time));
 	}
 	else 
 	{
@@ -33,8 +53,8 @@ vec3 getLight()
 }
 
 mat2 rotate(float angle) {
-	float si = sin(angle);
-	float co = sqrt(1-si*si);
+	float si = hashSin(angle);
+	float co = hashCos(angle);
 	return mat2(co, -si, si, co);
 }
 
@@ -82,7 +102,7 @@ vec3 getObjectParameter(int parameter, int index)
 	}
 	else if ( parameter == SIZE )
 	{
-		return vec3(objects[SIZE]);
+		return vec3(objects[SIZE], objects[SIZE+1], objects[SIZE+2]);
 	}
 	else if ( parameter == POS )
 	{
@@ -118,13 +138,13 @@ vec3 getMinDistObject(vec3 ro, vec3 rd)
 	vec2 minDist = BASE_DIST;
 	vec2 dist;
 	int formType;
-	float size;	int index = -1;
+	vec3 size;	int index = -1;
 	for ( int i=0; i<objects.length/OBJECT_LENGTH; i++ )
 	{
 		vec3 objectCoords = getObjectParameter(POS, i*OBJECT_LENGTH);
 		vec3 objectColor = getObjectParameter(COLOR, i*OBJECT_LENGTH);
 
-		size = objects[i*OBJECT_LENGTH+SIZE];
+		size = getObjectParameter(SIZE, i);
 		formType = int(objects[i*OBJECT_LENGTH+TYPE]);
 		 if ( formType==2 )
 		{
@@ -137,7 +157,7 @@ vec3 getMinDistObject(vec3 ro, vec3 rd)
 		}
 		else if ( formType==1 )
 		{
-			dist = boxIntersection(ro-objectCoords, rd, vec3(size),  vec3(0.0));
+			dist = boxIntersection(ro-objectCoords, rd, size,  vec3(0.0));
 			if (dist.x > 0.0 && minDist.x > dist.x)
 			{
 				minDist = dist;
@@ -146,7 +166,7 @@ vec3 getMinDistObject(vec3 ro, vec3 rd)
 		}
 		else if ( formType==0 )
 		{
-			dist = sphereIntersect(ro, rd, objectCoords, 1);
+			dist = sphereIntersect(ro, rd, objectCoords, size.x);
 			if(dist.x > 0.0 && dist.x < minDist.x)
 			{	
 				minDist = dist;
@@ -156,13 +176,17 @@ vec3 getMinDistObject(vec3 ro, vec3 rd)
 	}
 	return vec3(minDist, index*OBJECT_LENGTH);
 }
+vec3 gammaCorrect(vec3 color)
+{
+	return vec3( pow(color, vec3(1.0/2.2)));
+}
 vec3 colorLight(vec3 color, vec3 normal, vec3 rd)
 {
 	vec3 light = normalize(getLight());
 	float diffuse = max(0.0, dot(light, normal)) * 0.5 + 0.2;
 	float specular = max(0.0, pow(dot(reflect(rd, normal), light), LIGHT_POWER));	
 
-	return (vec3(diffuse+specular)+color)/2;
+	return gammaCorrect((vec3(diffuse+specular)+color)/1.5);
 }
 vec3 rayCast(vec3 ro, vec3 rd)
 {
