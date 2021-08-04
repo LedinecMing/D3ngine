@@ -7,8 +7,11 @@ int main()
     int h = 1200;
     int wd2 = w/2;
     int hd2 = h/2;
-    float PI = 3.14;
-    float gradus = 0.0174;
+    const float PI = 3.14;
+    const float gradus = 0.0174;
+    const float SPHERE = 0.0;
+    const float CUBE = 1.0;
+    const float PLANE = 2.0;
     bool keysInfo[10] = {false, false, false, false, false, false};
     sf::Vector3f camera = sf::Vector3f(-5.0, 0.0, 1.0);
     sf::Vector3f angle = sf::Vector3f(0.0, 0.0, 0.0);
@@ -21,12 +24,12 @@ int main()
     shader.setUniform("uni_resolution", sf::Vector2f(w,h));
     int objects_num = 2;
     const float speed = 0.5;
-    const float objects[objects_num*8]=
+    float objects[objects_num*8]=
     {
-        1, 5, 2, 0, 0.5, 1, 1, 1,
-        1, 2, 5, 0, 0.2, 1, 1, 1
+        CUBE, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
+        CUBE, 1.0, 1.0, 3.0, 1.0, 1.0, 0.0, 1.0
     };
-    shader.setUniformArray("objects", objects, objects_num);
+    shader.setUniformArray("objects", objects, objects_num*8);
     sf::RenderWindow window(sf::VideoMode(1600, 1200), "D3ngine", sf::Style::Fullscreen);
     window.setFramerateLimit(30);
     while (window.isOpen())
