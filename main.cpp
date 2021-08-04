@@ -1,37 +1,51 @@
 #include <SFML/Graphics.hpp>
 #include <math.h>
 #include <iostream>
+
+const float PI = 3.14;
+const float GRADUS = 0.0174;
+const float SPHERE = 0.0;
+const float CUBE = 1.0;
+const float PLANE = 2.0;
+
 int main()
 {
+    sf::Font font;
+    font.loadFromFile("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf");
     int w = 1600;
     int h = 1200;
     int wd2 = w/2;
     int hd2 = h/2;
-    const float PI = 3.14;
-    const float gradus = 0.0174;
-    const float SPHERE = 0.0;
-    const float CUBE = 1.0;
-    const float PLANE = 2.0;
     bool keysInfo[10] = {false, false, false, false, false, false};
+    float sinTable[180];
+    float cosTable[180]; 
+    for (int i = 0; i < 180; i++)
+    {
+        sinTable[i] = sin(i);
+        cosTable[i] = cos(i);
+    }
     sf::Vector3f camera = sf::Vector3f(-5.0, 0.0, 1.0);
     sf::Vector3f angle = sf::Vector3f(0.0, 0.0, 0.0);
     sf::RenderTexture emptyTexture;
     emptyTexture.create(w, h);
     sf::Clock clock;
+    float time = clock.getElapsedTime().asSeconds();
+    float diff = 0.0;
     sf::Sprite emptySprite = sf::Sprite(emptyTexture.getTexture());
     sf::Shader shader;
     shader.loadFromFile("shader.frag", sf::Shader::Fragment);
     shader.setUniform("uni_resolution", sf::Vector2f(w,h));
     int objects_num = 2;
     const float speed = 0.5;
-    float objects[objects_num*8]=
+    float objects[objects_num*10] =
     {
-        CUBE, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
-        CUBE, 1.0, 1.0, 3.0, 1.0, 1.0, 0.0, 1.0
+        CUBE, 1.0, 1.0, 1.0, 1.0, 1.0, 2.0, 1.0, 0.0, 1.0
     };
-    shader.setUniformArray("objects", objects, objects_num*8);
+    shader.setUniformArray("objects", objects, objects_num*10);
+    shader.setUniformArray("uni_sin", sinTable, 180);
+    shader.setUniformArray("uni_cos", cosTable, 180);
     sf::RenderWindow window(sf::VideoMode(1600, 1200), "D3ngine", sf::Style::Fullscreen);
-    window.setFramerateLimit(30);
+    window.setFramerateLimit(120);
     while (window.isOpen())
     {
         sf::Event event;
@@ -73,7 +87,7 @@ int main()
         }
         if (keysInfo[0])
         {
-            camera.x=camera.x+(speed*cos( angle.x));
+            camera.x=camera.x+(speed*cos(angle.x));
             camera.y=camera.y+(speed*sin( angle.x));
         }
         if (keysInfo[1])
@@ -101,25 +115,34 @@ int main()
         }
         if (keysInfo[6])
         {
-            angle.y+=gradus;
+            angle.y+=GRADUS;
         }
         if (keysInfo[7])
         {
-            angle.y-=gradus;
+            angle.y-=GRADUS;
         } 
         if (keysInfo[8])
         {
-            angle.x+=gradus;
+            angle.x+=GRADUS;
         } 
         if (keysInfo[9])
         {
-            angle.x-=gradus;
+            angle.x-=GRADUS;
         } 
         window.clear();
-        shader.setUniform("uni_time", clock.getElapsedTime().asSeconds());
+        diff = float(clock.getElapsedTime().asSeconds())-time;
+        time = clock.getElapsedTime().asSeconds();
+        sf::Text text;
+        text.setString(std::to_string(1/diff));
+        text.setFillColor(sf::Color::Red);
+        text.setCharacterSize(24);
+        text.setPosition(0, 0);
+        text.setFont(font); 
+        shader.setUniform("uni_time", time);
         shader.setUniform("camera", camera);
         shader.setUniform("uni_angle", angle);
         window.draw(emptySprite, &shader);
+        window.draw(text);
         window.display();
     }
 
