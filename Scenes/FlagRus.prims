@@ -1,9 +1,18 @@
 MODEL FLAG 
 {
-CUBE ->  0, 1, 1, 10, 60, 1, 1, 1, 1  
-CUBE -> 20, 1, 1, 10, 60, 1, 0, 0, 1  
+CUBE ->  0, 1, 1, 10, 60, 1, WHITE  
+CUBE -> 20, 1, 1, 10, 60, 1, BLUE 
   MODEL RED_LINE
   {
-  CUBE -> 40, 1, 1, 10, 60, 1, 1, 0, 0  
+  CUBE -> 40, 1, 1, 10, 60, 1, RED
   }
 }
+MODEL RED_ROAD
+{
+CUBE -> RED_LINE.X, RED_LINE.Y, RED_LINE.Z, 20, 120, RED
+}
+RETURN 
+( RED_LINE,
+  FLAG,
+  SPHERE, 30, 4, 8, 1, GREEN
+)
