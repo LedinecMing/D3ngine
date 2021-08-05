@@ -1,7 +1,6 @@
 #include <SFML/Graphics.hpp>
 #include <math.h>
 #include <iostream>
-#include<Model.cpp>
 
 const float PI = 3.14;
 const float GRADUS = 0.0174;
@@ -29,7 +28,6 @@ int main()
     sf::Shader shader;
     shader.loadFromFile("shader.frag", sf::Shader::Fragment);
     float speed = 0.1;
-    Model models[];
 
     float objects[] =
     {
