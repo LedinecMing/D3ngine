@@ -3,15 +3,8 @@ uniform vec2 uni_resolution;
 uniform float uni_time;
 uniform vec3 uni_angle;
 uniform vec3 camera;
-uniform float objects[10];
 
-uniform float uni_sin[180];
-uniform float uni_cos[180];
 
-const float LIGHT_POWER = 8.0;
-
-const int OBJECT_LENGTH = 10;
-const vec2 BASE_DIST = vec2(1000);
 // Object template vars indexes
 const int TYPE = 0;
 const int POS = 1;
@@ -19,9 +12,17 @@ const int SIZE = 4;
 const int COLOR = 7;
 // Object vars not included in object template
 const int NORMAL = 69;
+const int OBJECT_LENGTH = 10;
 
-bool cycle = true;
-bool is_init_hash = false;
+uniform float lightPower;
+uniform vec2 baseDist;
+
+uniform float objects[30];
+
+uniform float uni_sin[180];
+uniform float uni_cos[180];
+
+bool cycle = false;
 vec2 minDist = vec2(1000);
 float hashSin(float number)
 {
@@ -48,7 +49,7 @@ vec3 getLight()
 	}
 	else 
 	{
-		return vec3(-5.0, 5.0, -5.0);
+		return vec3(-500.0, 500.0, -500.0);
 	}
 }
 
@@ -102,7 +103,7 @@ vec3 getObjectParameter(int parameter, int index)
 	}
 	else if ( parameter == SIZE )
 	{
-		return vec3(objects[SIZE], objects[SIZE+1], objects[SIZE+2]);
+		return vec3(objects[index + SIZE], objects[index + SIZE+1], objects[index + SIZE+2]);
 	}
 	else if ( parameter == POS )
 	{
@@ -114,7 +115,7 @@ vec3 getObjectParameter(int parameter, int index, vec3 ro, vec3 rd, vec2 dist)
 	if ( parameter == NORMAL )
 	{
 		vec3 position = vec3(objects[index+POS], objects[index+POS+1], objects[index+POS+2]);
-		float type_form = objects[index*8+TYPE];
+		float type_form = objects[index+TYPE];
 		if ( type_form == 0 )
 		{
 			// Sphere normal
@@ -123,33 +124,36 @@ vec3 getObjectParameter(int parameter, int index, vec3 ro, vec3 rd, vec2 dist)
 		else if ( type_form == 1 )
 		{
 			// Cube normal
-			return normalize((ro+rd*dist.x) - position);
+			return normalize((ro+rd*dist.x) - position);//normalize((ro+rd*dist.x) - position);
 		}
 		else if ( type_form == 2 )
 		{
 			// Plain normal
-			return position;
+			return vec3(0, 0, -1);
 		}
 	}
 	return vec3(0);
 }
 vec3 getMinDistObject(vec3 ro, vec3 rd)
 {
-	vec2 minDist = BASE_DIST;
+	vec2 minDist = baseDist;
 	vec2 dist;
 	int formType;
 	vec3 size;	int index = -1;
 	for ( int i=0; i<objects.length/OBJECT_LENGTH; i++ )
 	{
+		size = getObjectParameter(SIZE, i*OBJECT_LENGTH);
+		if (size == vec3(0))
+		{
+			return vec3(baseDist, -1);
+		}
 		vec3 objectCoords = getObjectParameter(POS, i*OBJECT_LENGTH);
 		vec3 objectColor = getObjectParameter(COLOR, i*OBJECT_LENGTH);
-
-		size = getObjectParameter(SIZE, i);
 		formType = int(objects[i*OBJECT_LENGTH+TYPE]);
-		 if ( formType==2 )
+		if ( formType==2 )
 		{
-			dist = vec2(plainIntersect(ro, rd, vec4(objectCoords, 1.0)));
-			if(dist.x > 0.0 && minDist.x>dist.x)
+			dist = vec2(plainIntersect(ro, rd, normalize(vec4(objectCoords*10, 1.0))));
+			if(dist.x > 0.0 && minDist.x>dist.x )
 			{
 				minDist = dist;
 				index = i;
@@ -183,10 +187,10 @@ vec3 gammaCorrect(vec3 color)
 vec3 colorLight(vec3 color, vec3 normal, vec3 rd)
 {
 	vec3 light = normalize(getLight());
-	float diffuse = max(0.0, dot(light, normal)) * 0.5 + 0.2;
-	float specular = max(0.0, pow(dot(reflect(rd, normal), light), LIGHT_POWER));	
+	float diffuse = max(0.0, dot(light, normal));
+	float specular = max(0.0, pow(dot(reflect(rd, normal), light), lightPower));	
 
-	return gammaCorrect((vec3(diffuse+specular)+color)/1.5);
+	return gammaCorrect((mix(diffuse, specular, 0.5)*color));
 }
 vec3 rayCast(vec3 ro, vec3 rd)
 {
@@ -194,15 +198,13 @@ vec3 rayCast(vec3 ro, vec3 rd)
 	vec2 minDist = collideObject.xy;
 	int index = int( collideObject.z );
 	
-	if ( index < 0 || minDist == BASE_DIST)
+	if ( index < 0 || minDist == baseDist)
 	{
 		return vec3(0, 0, 1);	
 	}
-
 	vec3 objectColor = getObjectParameter(COLOR, index);
 	vec3 objectNormal = getObjectParameter(NORMAL, index, ro, rd, minDist);
 	vec3 readyColor = colorLight(objectColor, objectNormal, rd);
-
 	return readyColor;
 }
 void main()
