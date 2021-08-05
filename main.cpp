@@ -28,19 +28,19 @@ int main()
     sf::Shader shader;
     shader.loadFromFile("shader.frag", sf::Shader::Fragment);
     float speed = 0.1;
+    //Model models[];
 
     float objects[] =
     {
         // type, x, y, z, xw, yw, zw, r, g, b
-        PLANE, 0, 0, -1,  0, 1, 1, 0, 0, 0,
-        CUBE,  0, 1,  1, 10, 60, 1, 1, 1, 1,
-        CUBE, 20, 1,  1, 10, 60, 1, 0, 0, 1,
-        CUBE, 40, 1,  1, 10, 60, 1, 1, 0, 0
+        PLANE,  0, 0, -1,   0, 1, 1, 0, 1, 0,
+        CUBE,   0, 0, -1,   1, 1, 1, 1, 0, 0,
+        SPHERE, 2, 2, -1, 0.5, 0, 0, 0, 1, 1
     };
     int objectsLength = sizeof objects / sizeof objects[0];
 
     sf::Vector2f baseDist = sf::Vector2f(1000.0, 1000.0);
-    float lightPower = 8;
+    float lightPower = 2;
 
     shader.setUniform("lightPower", lightPower);
     shader.setUniform("baseDist", baseDist);
@@ -106,7 +106,7 @@ int main()
         }
         if (keysInfo[1])
         {
-            camera.x=camera.x+(-speed*sin( angle.x));
+            camera.x=camera.x+(speed*sin( angle.x));
             camera.y=camera.y+(-speed*cos( angle.x));
         }
         if (keysInfo[2])
@@ -116,7 +116,7 @@ int main()
         }
         if (keysInfo[3])
         {
-            camera.x=camera.x+(speed*sin( angle.x));
+            camera.x=camera.x+(-speed*sin( angle.x));
             camera.y=camera.y+(speed*cos( angle.x));
         }
         if (keysInfo[4])
@@ -129,19 +129,19 @@ int main()
         }
         if (keysInfo[6])
         {
-            angle.y+=GRADUS;
+            angle.y-=GRADUS;
         }
         if (keysInfo[7])
         {
-            angle.y-=GRADUS;
+            angle.y+=GRADUS;
         } 
         if (keysInfo[8])
         {
-            angle.x+=GRADUS;
+            angle.x-=GRADUS;
         } 
         if (keysInfo[9])
         {
-            angle.x-=GRADUS;
+            angle.x+=GRADUS;
         } 
         window.clear();
         diff = float(clock.getElapsedTime().asSeconds())-time;
