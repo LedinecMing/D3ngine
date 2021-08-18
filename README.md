@@ -15,10 +15,10 @@
 #include <iostream>
 #include "TextRenderer.cpp"
 ```
-SFML/Graphics.hpp - для создания окна и его управления.
-math.h - для тригонометрических вычислений
-TextRenderer.cpp - для однострочной инициализации текстов и шрифтов
-
+SFML/Graphics.hpp - для создания окна и его управления.  
+math.h - для тригонометрических вычислений  
+TextRenderer.cpp - для однострочной инициализации текстов и шрифтов  
+  
 Далее устанавливаются константы, необходимые для корректной работы
 ```
 const float PI = 3.14;
@@ -27,7 +27,7 @@ const float SPHERE = 0.0;
 const float CUBE = 1.0;
 const float PLAIN = 2.0;
 ```
-GRADUS - значение 1 градуса в радианах, перевод в радианы необходим для корректной работы тригонометрических функций glsl
+GRADUS - значение 1 градуса в радианах, перевод в радианы необходим для корректной работы тригонометрических функций glsl  
 SPHERE, CUBE, PLANE - константы обозначений примитивов
 ```
 int w = 1600;
@@ -36,34 +36,34 @@ int wd2 = w/2;
 int hd2 = h/2;
 bool keysInfo[10] = {false};
 ```
-w, h - значения размера экрана в int
-wd2, hd2 - размер экрана разделенный на 2, в int.
-keysInfo - массив булевых значений нажатых клавиш
+w, h - значения размера экрана в int  
+wd2, hd2 - размер экрана разделенный на 2, в int.  
+keysInfo - массив булевых значений нажатых клавиш  
 
 ```
 sf::Vector3f camera = sf::Vector3f(-5.0, 0.0, -1.0);
 sf::Vector3f angle = sf::Vector3f(0.0, 0.0, 0.0);
 ```
-camera(Vec3) - позиция камеры
-angle(Vec3) - угол направления камеры
-
+camera(Vec3) - позиция камеры  
+angle(Vec3) - угол направления камеры  
+  
 ```
 sf::RenderTexture emptyTexture;
 emptyTexture.create(w, h);
 sf::Sprite emptySprite = sf::Sprite(emptyTexture.getTexture());
 ```
-Создание пустого спрайта под размер экрана
-
+Создание пустого спрайта под размер экрана  
+  
 Переменные для расчёта FPS
 ```
 sf::Clock clock;
 float time = clock.getElapsedTime().asSeconds();
 float diff = 0.0;
 ```
-clock - отслеживает время
-time - время на момент отрисовки последнего кадра
-diff - разница между текущим временем и time
-
+clock - отслеживает время  
+time - время на момент отрисовки последнего кадра  
+diff - разница между текущим временем и time  
+  
 Загрузка шейдера
 ```
 sf::Shader shader;
