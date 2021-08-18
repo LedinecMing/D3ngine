@@ -1,23 +1,23 @@
 #include <SFML/Graphics.hpp>
 #include <math.h>
 #include <iostream>
+#include <functional>
+#include "TextRenderer.cpp"
 
 const float PI = 3.14;
 const float GRADUS = 0.0174;
 const float SPHERE = 0.0;
 const float CUBE = 1.0;
-const float PLANE = 2.0;
+const float PLAIN = 2.0;
 
 int main()
 {
-    sf::Font font;
-    font.loadFromFile("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf");
     int w = 1600;
     int h = 1200;
     int wd2 = w/2;
     int hd2 = h/2;
-    bool keysInfo[10] = {false, false, false, false, false, false};
-    sf::Vector3f camera = sf::Vector3f(-5.0, 0.0, 1.0);
+    bool keysInfo[10] = {false};
+    sf::Vector3f camera = sf::Vector3f(-5.0, 0.0, -1.0);
     sf::Vector3f angle = sf::Vector3f(0.0, 0.0, 0.0);
     sf::RenderTexture emptyTexture;
     emptyTexture.create(w, h);
@@ -27,14 +27,12 @@ int main()
     sf::Sprite emptySprite = sf::Sprite(emptyTexture.getTexture());
     sf::Shader shader;
     shader.loadFromFile("shader.frag", sf::Shader::Fragment);
-    float speed = 0.1;
-    //Model models[];
-
+    float speed = 0.05;
     float objects[] =
     {
         // type, x, y, z, xw, yw, zw, r, g, b
-        PLANE,  0, 0, -1,   0, 1, 1, 0, 1, 0,
-        CUBE,   0, 0, -1,   1, 1, 1, 1, 0, 0,
+        PLAIN,  0, 0, -1,   0, 1, 1, 0, 1, 0,
+        CUBE,   0, 0, -1,   1, 1, 1.5, 1, 0, 0,
         SPHERE, 2, 2, -1, 0.5, 0, 0, 0, 1, 1
     };
     int objectsLength = sizeof objects / sizeof objects[0];
@@ -146,20 +144,12 @@ int main()
         window.clear();
         diff = float(clock.getElapsedTime().asSeconds())-time;
         time = clock.getElapsedTime().asSeconds();
-        sf::Text text;
-        text.setString(std::to_string(1/diff)+" fps");
-        text.setFillColor(sf::Color::Red);
-        text.setCharacterSize(24);
-        text.setPosition(0, 0);
-        text.setFont(font); 
         shader.setUniform("uni_time", time);
         shader.setUniform("camera", camera);
         shader.setUniform("uni_angle", angle);
         window.draw(emptySprite, &shader);
-        window.draw(text);
-        text.setString("x"+std::to_string(camera.x)+"y"+std::to_string(camera.y)+"z"+std::to_string(camera.z));
-        text.setPosition(0, 24);
-        window.draw(text);
+        window.draw(getText("x"+std::to_string(camera.x)+"y"+std::to_string(camera.y)+"z"+std::to_string(camera.z), 0, 24, 24, getFont("Fonts/DejaVuSans.ttf"), sf::Color::Red));
+        window.draw(getText(std::to_string(1/diff)+" fps", 0, 48, 24, getFont("Fonts/DejaVuSans.ttf"), sf::Color::Red));
         window.display();
     }
 
