@@ -116,10 +116,10 @@ shader.setUniformArray("uni_sin", sinTable, 180);
 shader.setUniformArray("uni_cos", cosTable, 180);
 ```
 
-Инициализация окна и установка максимального FPS
+Инициализация окна и включение Vsync
 ```
 sf::RenderWindow window(sf::VideoMode(1600, 1200), "D3ngine", sf::Style::Fullscreen);
-window.setFramerateLimit(120);
+window.setVerticalSyncEnabled(true);
 ```
 
 Цикл, работающий до закрытия окна
