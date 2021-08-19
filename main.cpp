@@ -57,9 +57,12 @@ int main()
     shader.setUniformArray("uni_cos", cosTable, 180);
 
     sf::RenderWindow window(sf::VideoMode(1600, 1200), "D3ngine", sf::Style::Fullscreen);
-    window.setFramerateLimit(120);
+    window.setVerticalSyncEnabled(true);
+
     while (window.isOpen())
     {
+        shader.setUniform("getInfo", true);
+        bool result = bool(texture.draw(sprite1x1, &shader).copyToImage().getPixel(0,0)[0]);
         sf::Event event;
         while (window.pollEvent(event))
         {
@@ -99,12 +102,12 @@ int main()
         }
         if (keysInfo[0])
         {
-            camera.x=camera.x+(speed*cos(angle.x));
+            camera.x=camera.x+(speed*cos( angle.x));
             camera.y=camera.y+(speed*sin( angle.x));
         }
         if (keysInfo[1])
         {
-            camera.x=camera.x+(speed*sin( angle.x));
+            camera.x=camera.x+( speed*sin( angle.x));
             camera.y=camera.y+(-speed*cos( angle.x));
         }
         if (keysInfo[2])
@@ -115,7 +118,7 @@ int main()
         if (keysInfo[3])
         {
             camera.x=camera.x+(-speed*sin( angle.x));
-            camera.y=camera.y+(speed*cos( angle.x));
+            camera.y=camera.y+( speed*cos( angle.x));
         }
         if (keysInfo[4])
         {
@@ -141,6 +144,7 @@ int main()
         {
             angle.x+=GRADUS;
         } 
+        shader.setUniformArray("objects", objects, objectsLength);
         window.clear();
         diff = float(clock.getElapsedTime().asSeconds())-time;
         time = clock.getElapsedTime().asSeconds();
