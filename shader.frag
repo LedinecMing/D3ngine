@@ -1,61 +1,49 @@
 #version 130
 uniform vec2 uni_resolution;
 uniform float uni_time;
-uniform vec3 uni_angle;
-uniform vec3 camera;
 
+// Camera data
+uniform vec3 cameraSize;
+uniform vec3 cameraAngle;
+uniform vec3 cameraPosition;
 
 // Object template vars indexes
 const int TYPE = 0;
 const int POS = 1;
 const int SIZE = 4;
-const int COLOR = 7;
-// Object vars not included in object template
+const int ANGLE = 7;
+const int COLOR = 10;
+// Object vars which are not included in object template
 const int NORMAL = 69;
-const int OBJECT_LENGTH = 10;
+const int OBJECT_LENGTH = 13;
+
+const vec3 GOT_SKY = vec3(-1, -1, -1);
 
 uniform float lightPower;
-uniform vec2 baseDist;
+uniform vec2 baseDistation;
 
-uniform float objects[30];
+uniform float objects[39];
 
-uniform float uni_sin[180];
-uniform float uni_cos[180];
+uniform bool getInfo;
 
-bool cycle = false;
+bool lightCycle = true;
 vec2 minDist = vec2(1000);
-float hashSin(float number)
-{
-	if (number-int(number)==0)
-	{ 
-		return uni_sin[int(number)%180];
-	}
-	return sin(number);
-}
-float hashCos(float number)
-{
-	if (number-int(number)==0)
-	{ 
-		return uni_cos[int(number)%180];
-	}
-	return cos(number);
-}
 
 vec3 getLight()
 {	
-	if ( cycle )
+	if ( lightCycle )
 	{
-		return vec3(hashCos(uni_time), 0.75, hashSin(uni_time));
+		return vec3(cos(uni_time), 0.75, sin(uni_time));
 	}
 	else 
 	{
-		return vec3(-500.0, 500.0, -500.0);
+		return vec3(-0.5, 0.75, 1);
 	}
 }
 
 mat2 rotate(float angle) {
-	float si = hashSin(angle);
-	float co = hashCos(angle);
+	float si = sin(angle);
+	float co = cos(angle);
 	return mat2(co, -si, si, co);
 }
 
@@ -71,7 +59,7 @@ vec2 sphereIntersect( in vec3 ro, in vec3 rd, in vec3 ce, float ra )
 	return vec2( -b-h, -b+h ); 
 }
 // axis aligned box centered at the origin, with size boxSize
-float plainIntersect(in vec3 ro, in vec3 rd, in vec4 p) 
+float planeIntersect(in vec3 ro, in vec3 rd, in vec4 p) 
 {
 	return -(dot(ro, p.xyz) + p.w) / dot(rd, p.xyz);
 }
@@ -93,8 +81,23 @@ vec2 boxIntersection( in vec3 ro, in vec3 rd, vec3 boxSize, vec3 outNormal )
 	// no intersection 
 	outNormal = -sign(rd)*step(t1.yzx,t1.xyz)*step(t1.zxy,t1.xyz); 
 	return vec2( tN, tF ); 
-
 }
+// triangle degined by vertices v0, v1 and  v2
+vec3 triangleIntersect( in vec3 ro, in vec3 rd, in vec3 v0, in vec3 v1, in vec3 v2 )
+{
+    vec3 v1v0 = v1 - v0;
+    vec3 v2v0 = v2 - v0;
+    vec3 rov0 = ro - v0;
+    vec3  n = cross( v1v0, v2v0 );
+    vec3  q = cross( rov0, rd );
+    float d = 1.0/dot( rd, n );
+    float u = d*dot( -q, v2v0 );
+    float v = d*dot(  q, v1v0 );
+    float t = d*dot( -n, rov0 );
+    if( u<0.0 || u>1.0 || v<0.0 || (u+v)>1.0 ) t = -1.0;
+    return vec3( t, u, v );
+}
+
 vec3 getObjectParameter(int parameter, int index)
 {
 	if ( parameter == COLOR )
@@ -110,79 +113,78 @@ vec3 getObjectParameter(int parameter, int index)
 		return vec3(objects[index + POS], objects[index + POS + 1], objects[index + POS + 2]);
 	}
 }
-vec3 getObjectParameter(int parameter, int index, vec3 ro, vec3 rd, vec2 dist)
+vec3 getObjectParameter(int parameter, int objectIndex, vec3 rayOrigin, vec3 rayDirection, vec2 distation)
 {
 	if ( parameter == NORMAL )
 	{
-		vec3 position = vec3(objects[index+POS], objects[index+POS+1], objects[index+POS+2]);
-		float type_form = objects[index+TYPE];
+		vec3 position = vec3(objects[objectIndex+POS], objects[objectIndex+POS+1], objects[objectIndex+POS+2]);
+		float type_form = objects[objectIndex+TYPE];
 		if ( type_form == 0 )
 		{
 			// Sphere normal
-			return normalize((ro+rd*dist.x) - position);
+			return normalize((rayOrigin+rayDirection*distation.x) - position);
 		}
 		else if ( type_form == 1 )
 		{
 			// Cube normal
-			return normalize((ro+rd*dist.x) - position);//normalize((ro+rd*dist.x) - position);
+			//return normalize((rayOrigin+rayDirection*distation.x) - position);
+			vec3 boxnormal;
+			return boxnormal;
 		}
 		else if ( type_form == 2 )
 		{
-			// Plain normal
-			return vec3(0, 0, -1);
+			// Plane normal
+			return vec3(0, 0, 1);
 		}
 	}
 	return vec3(0);
 }
-vec3 getMinDistObject(vec3 ro, vec3 rd)
+vec3 getMinDistObject(vec3 rayOrigin, vec3 rayDirection)
 {
-	vec2 minDist = baseDist;
-	vec2 dist;
-	int formType;
-	vec3 size;	int index = -1;
+	vec3 objectSize;
+	vec3 objectCoords;
+	vec3 objectColor;
+
+	vec2 minDistation = baseDistation;
+	vec2 distation;
+
+	int objectForm;
+	int objectIndex;
+
 	for ( int i=0; i<objects.length/OBJECT_LENGTH; i++ )
 	{
-		size = getObjectParameter(SIZE, i*OBJECT_LENGTH);
-		if (size == vec3(0))
+		objectSize = getObjectParameter(SIZE, i*OBJECT_LENGTH);
+		if ( objectSize == vec3(0))
 		{
-			return vec3(baseDist, -1);
+			return vec3(baseDistation, -1);
 		}
-		vec3 objectCoords = getObjectParameter(POS, i*OBJECT_LENGTH);
-		vec3 objectColor = getObjectParameter(COLOR, i*OBJECT_LENGTH);
-		formType = int(objects[i*OBJECT_LENGTH+TYPE]);
-		if ( formType==2 )
+		objectCoords = getObjectParameter(POS, i*OBJECT_LENGTH);
+		objectColor = getObjectParameter(COLOR, i*OBJECT_LENGTH);
+		objectForm = int(objects[i*OBJECT_LENGTH+TYPE]);
+		switch ( objectForm )
 		{
-			dist = vec2(plainIntersect(ro, rd, normalize(vec4(objectCoords*10, 1.0))));
-			if(dist.x > 0.0 && minDist.x>dist.x )
-			{
-				minDist = dist;
-				index = i;
-			}
+			case 2:
+				distation = vec2(planeIntersect(rayOrigin, rayDirection, normalize(vec4(objectCoords*10, 1.0))));
+				break;
+			case 1:
+				distation = boxIntersection(rayOrigin-objectCoords, rayDirection, objectSize,  vec3(0.0));
+				break;
+			case 0:
+				distation = sphereIntersect(rayOrigin, rayDirection, objectCoords, objectSize.x);
+				break;
 		}
-		else if ( formType==1 )
+		if(distation.x > 0.0 && minDistation.x>distation.x )
 		{
-			dist = boxIntersection(ro-objectCoords, rd, size,  vec3(0.0));
-			if (dist.x > 0.0 && minDist.x > dist.x)
-			{
-				minDist = dist;
-				index = i;
-			} 	
-		}
-		else if ( formType==0 )
-		{
-			dist = sphereIntersect(ro, rd, objectCoords, size.x);
-			if(dist.x > 0.0 && dist.x < minDist.x)
-			{	
-				minDist = dist;
-				index = i;
-			}
+			minDistation = distation;
+			objectIndex = i;
 		}
 	}
-	return vec3(minDist, index*OBJECT_LENGTH);
+	rayOrigin += rayDirection * (minDistation.x - 0.001);
+	return vec3(minDistation, objectIndex*OBJECT_LENGTH);
 }
 vec3 gammaCorrect(vec3 color)
 {
-	return vec3( pow(color, vec3(1.0/2.2)));
+	return vec3( pow(color, vec3(0.45)));
 }
 vec3 colorLight(vec3 color, vec3 normal, vec3 rd)
 {
@@ -192,27 +194,49 @@ vec3 colorLight(vec3 color, vec3 normal, vec3 rd)
 
 	return gammaCorrect((mix(diffuse, specular, 0.5)*color));
 }
-vec3 rayCast(vec3 ro, vec3 rd)
+vec3 castRay(vec3 rayOrigin, vec3 rayDirection)
 {
-	vec3 collideObject = getMinDistObject(ro, rd);
-	vec2 minDist = collideObject.xy;
-	int index = int( collideObject.z );
+	vec3 collideObject = getMinDistObject(rayOrigin, rayDirection);
+	vec2 minDistation = collideObject.xy;
+	int objectIndex = int( collideObject.z );
 	
-	if ( index < 0 || minDist == baseDist)
+	if ( objectIndex < 0 || minDistation == baseDistation)
 	{
-		return vec3(0, 0, 1);	
+		return vec3(-1, -1, -1);	
 	}
-	vec3 objectColor = getObjectParameter(COLOR, index);
-	vec3 objectNormal = getObjectParameter(NORMAL, index, ro, rd, minDist);
-	vec3 readyColor = colorLight(objectColor, objectNormal, rd);
+	vec3 objectColor = getObjectParameter(COLOR, objectIndex);
+	vec3 objectNormal = getObjectParameter(NORMAL, objectIndex, rayOrigin, rayDirection, minDistation);
+	vec3 readyColor = colorLight(objectColor, objectNormal, rayDirection);
 	return readyColor;
+}
+vec3 rayTrace(vec3 rayOrigin, vec3 rayDirection)
+{
+	vec3 color = castRay(rayOrigin, rayDirection);
+
+	if ( color == GOT_SKY )
+	{
+		return vec3(0, 0, 1);
+	}
+
+	vec3 lightDirection = normalize( getLight() );
+
+	if ( castRay(getMinDistObject(rayOrigin, rayOrigin+rayDirection)[0]*rayDirection, lightDirection*vec3(1)) == GOT_SKY )
+	{
+		color*=0.0;
+	}
+	return color;
 }
 void main()
 {
+	if ( getInfo )
+	{
+		gl_FragColor = vec4( int(getMinDistObject(cameraPosition, vec3(0, 0, -1))[0]), 0, 0, 1);
+		return;
+	}
 	vec2 uv = (gl_TexCoord[0].xy - 0.5) * uni_resolution / uni_resolution.y;
 	vec3 rayDirection = normalize(vec3(1.0, uv));
-	rayDirection.zx *= rotate(-uni_angle.y);
-	rayDirection.xy *= rotate(uni_angle.x);
-	vec3 render = rayCast(camera, rayDirection);
-	gl_FragColor = vec4(render, 1.0);
+	rayDirection.zx *= rotate(cameraAngle.y);
+	rayDirection.xy *= rotate(cameraAngle.x);
+	vec3 render = rayTrace(cameraPosition, rayDirection);
+	gl_FragColor = vec4(render, 1);
 }
