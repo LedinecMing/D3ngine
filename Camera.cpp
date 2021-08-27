@@ -21,6 +21,7 @@ class Camera
 		void move(sf::Vector3f directionToMove)
 		{
 			_position+=directionToMove*_speed;
+			// _position.x+=
 		}
 
 		void addAngle(sf::Vector3f angle)
