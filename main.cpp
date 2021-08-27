@@ -2,59 +2,54 @@
 #include <math.h>
 #include <iostream>
 #include <functional>
-#include "TextRenderer.cpp"
 
-const float PI = 3.14;
-const float GRADUS = 0.0174;
-const float SPHERE = 0.0;
-const float CUBE = 1.0;
-const float PLAIN = 2.0;
+#include "TextRenderer.cpp"
+#include "Camera.cpp"
 
 int main()
 {
-    int w = 1600;
-    int h = 1200;
-    int wd2 = w/2;
-    int hd2 = h/2;
+    int windowWidth = 1600;
+    int windowHeight = 1200;
+    int wd2 = windowWidth/2;
+    int hd2 = windowHeight/2;
+
     bool keysInfo[10] = {false};
-    sf::Vector3f camera = sf::Vector3f(-5.0, 0.0, -1.0);
-    sf::Vector3f angle = sf::Vector3f(0.0, 0.0, 0.0);
+
+    Camera camera = Camera(sf::Vector3f(-5.0, 0.0, 2.0), sf::Vector3f(0, -PI, 0), sf::Vector3f(0.5, 0.5, 20), 0.5);
     sf::RenderTexture emptyTexture;
-    emptyTexture.create(w, h);
+    emptyTexture.create(windowWidth, windowHeight);
+
+    sf::RenderTexture dataTransferTexture;
+    dataTransferTexture.create(1, 1);
+
     sf::Clock clock;
-    float time = clock.getElapsedTime().asSeconds();
-    float diff = 0.0;
+    float lastFrameRenderTime = clock.getElapsedTime().asSeconds();
+    float diferrenceBeetwenLastFrames = 0.0;
+
     sf::Sprite emptySprite = sf::Sprite(emptyTexture.getTexture());
+    sf::Sprite sprite1x1 = sf::Sprite();
+
     sf::Shader shader;
     shader.loadFromFile("shader.frag", sf::Shader::Fragment);
-    float speed = 0.05;
+
     float objects[] =
     {
-        // type, x, y, z, xw, yw, zw, r, g, b
-        PLAIN,  0, 0, -1,   0, 1, 1, 0, 1, 0,
-        CUBE,   0, 0, -1,   1, 1, 1.5, 1, 0, 0,
-        SPHERE, 2, 2, -1, 0.5, 0, 0, 0, 1, 1
+        // type, x, y, z, xw, yw, zw, xa, ya, za, r, g, b
+         PLANE, 0, 0, 1, 1, 1,   1, 1, 0, 0, 0, 1, 0,
+        SPHERE, 0, 0, 1, 1, 1, 1.5, 0, 0, 0, 1, 0, 0,
+          CUBE, 2, 2, 1, 1, 2,   2, 1, 1, 0, 1, 1, 0
     };
     int objectsLength = sizeof objects / sizeof objects[0];
+    std::cout<<objectsLength;
 
-    sf::Vector2f baseDist = sf::Vector2f(1000.0, 1000.0);
+    sf::Vector2f baseDistation = sf::Vector2f(1000.0, 1000.0);
     float lightPower = 2;
 
     shader.setUniform("lightPower", lightPower);
-    shader.setUniform("baseDist", baseDist);
+    shader.setUniform("baseDistation", baseDistation);
 
-    shader.setUniform("uni_resolution", sf::Vector2f(w,h));
+    shader.setUniform("uni_resolution", sf::Vector2f(windowWidth, windowHeight));
     shader.setUniformArray("objects", objects, objectsLength);
-
-    float sinTable[180];
-    float cosTable[180]; 
-    for (int i = 0; i < 180; i++)
-    {
-        sinTable[i] = sin(i);
-        cosTable[i] = cos(i);
-    }
-    shader.setUniformArray("uni_sin", sinTable, 180);
-    shader.setUniformArray("uni_cos", cosTable, 180);
 
     sf::RenderWindow window(sf::VideoMode(1600, 1200), "D3ngine", sf::Style::Fullscreen);
     window.setVerticalSyncEnabled(true);
@@ -62,7 +57,16 @@ int main()
     while (window.isOpen())
     {
         shader.setUniform("getInfo", true);
-        bool result = bool(texture.draw(sprite1x1, &shader).copyToImage().getPixel(0,0)[0]);
+
+        dataTransferTexture.draw(sprite1x1, &shader);
+
+        bool result = bool((dataTransferTexture.getTexture()).copyToImage().getPixel(0,0).r);
+        if ( result )
+        {
+            camera.fall();
+        }
+
+        shader.setUniform("getInfo", false);
         sf::Event event;
         while (window.pollEvent(event))
         {
@@ -74,6 +78,7 @@ int main()
                 {
                     window.close();
                 }
+
                 if (event.key.code == sf::Keyboard::W) keysInfo[0] = true;
                 else if (event.key.code == sf::Keyboard::A) keysInfo[1] = true;
                 else if (event.key.code == sf::Keyboard::S) keysInfo[2] = true;
@@ -102,58 +107,69 @@ int main()
         }
         if (keysInfo[0])
         {
-            camera.x=camera.x+(speed*cos( angle.x));
-            camera.y=camera.y+(speed*sin( angle.x));
+/*            camera.x=camera.x+(speed*cos( angle.x));
+            camera.y=camera.y+(speed*sin( angle.x));*/
+            camera.move(FORWARD);
         }
         if (keysInfo[1])
         {
-            camera.x=camera.x+( speed*sin( angle.x));
-            camera.y=camera.y+(-speed*cos( angle.x));
+            // camera.x=camera.x+( speed*sin( angle.x));
+            // camera.y=camera.y+(-speed*cos( angle.x));
+            camera.move(LEFT);
         }
         if (keysInfo[2])
         {
-            camera.x=camera.x+(-speed*cos( angle.x));
-            camera.y=camera.y+(-speed*sin( angle.x));
+            // camera.x=camera.x+(-speed*cos( angle.x));
+            // camera.y=camera.y+(-speed*sin( angle.x));
+            camera.move(BACKWARD);
         }
         if (keysInfo[3])
         {
-            camera.x=camera.x+(-speed*sin( angle.x));
-            camera.y=camera.y+( speed*cos( angle.x));
+            // camera.x=camera.x+(-speed*sin( angle.x));
+            // camera.y=camera.y+( speed*cos( angle.x));
+            camera.move(RIGHT);
         }
         if (keysInfo[4])
         {
-            camera.z+=speed;
+            camera.move(UP);
         }
         if (keysInfo[5])
         {
-            camera.z-=speed;
+            camera.move(DOWN);
         }
         if (keysInfo[6])
         {
-            angle.y-=GRADUS;
+            camera.addAngle(sf::Vector3f(0, -GRADUS, 0));
         }
         if (keysInfo[7])
         {
-            angle.y+=GRADUS;
+            camera.addAngle(sf::Vector3f(0, GRADUS, 0));
         } 
         if (keysInfo[8])
         {
-            angle.x-=GRADUS;
+            camera.addAngle(sf::Vector3f(-GRADUS, 0, 0));
         } 
         if (keysInfo[9])
         {
-            angle.x+=GRADUS;
+            camera.addAngle(sf::Vector3f(GRADUS, 0, 0));
         } 
         shader.setUniformArray("objects", objects, objectsLength);
         window.clear();
-        diff = float(clock.getElapsedTime().asSeconds())-time;
-        time = clock.getElapsedTime().asSeconds();
-        shader.setUniform("uni_time", time);
-        shader.setUniform("camera", camera);
-        shader.setUniform("uni_angle", angle);
+
+        diferrenceBeetwenLastFrames = float(clock.getElapsedTime().asSeconds())-lastFrameRenderTime;
+        lastFrameRenderTime = clock.getElapsedTime().asSeconds();
+
+        shader.setUniform("uni_time", lastFrameRenderTime);
+
+        shader.setUniform("cameraPosition", camera.getPosition());
+        shader.setUniform("cameraAngle", camera.getAngle());
+        shader.setUniform("cameraSize", camera.getSize());
+
         window.draw(emptySprite, &shader);
-        window.draw(getText("x"+std::to_string(camera.x)+"y"+std::to_string(camera.y)+"z"+std::to_string(camera.z), 0, 24, 24, getFont("Fonts/DejaVuSans.ttf"), sf::Color::Red));
-        window.draw(getText(std::to_string(1/diff)+" fps", 0, 48, 24, getFont("Fonts/DejaVuSans.ttf"), sf::Color::Red));
+        window.draw(getText("x"+std::to_string(camera.getPosition().x)+"y"+std::to_string(camera.getPosition().y)+"z"+std::to_string(camera.getPosition().z), 0, 24, 24, getFont("Fonts/DejaVuSans.ttf"), sf::Color::Red));
+        window.draw(getText(std::to_string(1/diferrenceBeetwenLastFrames)+" fps", 0, 48, 24, getFont("Fonts/DejaVuSans.ttf"), sf::Color::Red));
+        window.draw(getText("x"+std::to_string(camera.getAngle().x)+"y"+std::to_string(camera.getAngle().y)+"z"+std::to_string(camera.getAngle().z), 0, 72, 24, getFont("Fonts/DejaVuSans.ttf"), sf::Color::Red));
+
         window.display();
     }
 
