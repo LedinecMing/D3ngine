@@ -1,6 +1,6 @@
 ## D3ngine
 ## Трёхмерный движок основанный на рейкастинге шейдером.
-![Пример работы текущей версии](https://github.com/LedinecMing/D3ngine/raw/main/Screenshots/снимок.png)
+![Пример работы текущей версии](https://github.com/LedinecMing/D3ngine/raw/shader/Screenshots/снимок.png)
 # Управление
 `WASD` для передвижения  
 `Left Right Up Down` для поворота камеры  
