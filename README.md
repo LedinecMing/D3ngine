@@ -1,6 +1,9 @@
 ## D3ngine
 ## Трёхмерный движок основанный на рейкастинге шейдером.
+MAX_REFLECT = 16
 ![Пример работы текущей версии](https://github.com/LedinecMing/D3ngine/raw/shader/Screenshots/снимок.png)
+MAX_REFLECT = 256
+![Пример работы текущей версии](https://github.com/LedinecMing/D3ngine/raw/shader/Screenshots/снимок1.png)
 # Управление
 `WASD` для передвижения  
 `Left Right Up Down` для поворота камеры  
