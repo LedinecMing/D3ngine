@@ -34,10 +34,10 @@ int main()
 
     float objects[] =
     {
-        // type, x, y, z, xw, yw, zw, xa, ya, za, r, g, b
-         PLANE, 0, 0, 1, 1, 1,   1, 1, 0, 0, 0, 1, 0,
-        SPHERE, 0, 0, 1, 1, 1, 1.5, 0, 0, 0, 1, 0, 0,
-          CUBE, 2, 2, 1, 1, 2,   2, 1, 1, 0, 1, 1, 0
+       // type, x, y, z, xw, yw, zw, xa, ya, za, r, g, b
+         PLANE, 0, 0, 1, 1, 1,   1, 1, 0, 0, 1, 1, 1,
+        SPHERE, 0, 0, 1, 1, 1, 1.5, 1, 1, 0, 1, 1, 1,
+          CUBE, 2, 2, 1, 1, 2,   2, 1, 1, 0, 1, 1, 1
     };
     int objectsLength = sizeof objects / sizeof objects[0];
     std::cout<<objectsLength;
@@ -160,11 +160,10 @@ int main()
         lastFrameRenderTime = clock.getElapsedTime().asSeconds();
 
         shader.setUniform("uni_time", lastFrameRenderTime);
-
         shader.setUniform("cameraPosition", camera.getPosition());
         shader.setUniform("cameraAngle", camera.getAngle());
         shader.setUniform("cameraSize", camera.getSize());
-
+ 
         window.draw(emptySprite, &shader);
         window.draw(getText("x"+std::to_string(camera.getPosition().x)+"y"+std::to_string(camera.getPosition().y)+"z"+std::to_string(camera.getPosition().z), 0, 24, 24, getFont("Fonts/DejaVuSans.ttf"), sf::Color::Red));
         window.draw(getText(std::to_string(1/diferrenceBeetwenLastFrames)+" fps", 0, 48, 24, getFont("Fonts/DejaVuSans.ttf"), sf::Color::Red));
