@@ -35,9 +35,10 @@ int main()
     float objects[] =
     {
        // type, x, y, z, xw, yw, zw, xa, ya, za, r, g, b
-         PLANE, 0, 0, 1, 1, 1,   1, 1, 0, 0, 1, 1, 1,
-        SPHERE, 0, 0, 1, 1, 1, 1.5, 1, 1, 0, 1, 1, 1,
-          CUBE, 2, 2, 1, 1, 2,   2, 1, 1, 0, 1, 1, 1
+         PLANE, 0, 0, 1,   1,   1,   1, 1, 0, 0, 1, 1, 1,
+          CUBE, 0, 0, 2,   1,   1,   1, 0.9, 0, 0, 1, 1, 1,
+          SPHERE, 0, 3, 2, 0.5,   1,   1, 0.9, 0, 0, 1, 1, 1
+
     };
     int objectsLength = sizeof objects / sizeof objects[0];
     std::cout<<objectsLength;
@@ -107,26 +108,18 @@ int main()
         }
         if (keysInfo[0])
         {
-/*            camera.x=camera.x+(speed*cos( angle.x));
-            camera.y=camera.y+(speed*sin( angle.x));*/
             camera.move(FORWARD);
         }
         if (keysInfo[1])
         {
-            // camera.x=camera.x+( speed*sin( angle.x));
-            // camera.y=camera.y+(-speed*cos( angle.x));
             camera.move(LEFT);
         }
         if (keysInfo[2])
         {
-            // camera.x=camera.x+(-speed*cos( angle.x));
-            // camera.y=camera.y+(-speed*sin( angle.x));
             camera.move(BACKWARD);
         }
         if (keysInfo[3])
         {
-            // camera.x=camera.x+(-speed*sin( angle.x));
-            // camera.y=camera.y+( speed*cos( angle.x));
             camera.move(RIGHT);
         }
         if (keysInfo[4])
@@ -139,19 +132,19 @@ int main()
         }
         if (keysInfo[6])
         {
-            camera.addAngle(sf::Vector3f(0, -GRADUS, 0));
+            camera.addAngle(sf::Vector3f(0, GRADUS, 0));
         }
         if (keysInfo[7])
         {
-            camera.addAngle(sf::Vector3f(0, GRADUS, 0));
+            camera.addAngle(sf::Vector3f(0, -GRADUS, 0));
         } 
         if (keysInfo[8])
         {
-            camera.addAngle(sf::Vector3f(-GRADUS, 0, 0));
+            camera.addAngle(sf::Vector3f(GRADUS, 0, 0));
         } 
         if (keysInfo[9])
         {
-            camera.addAngle(sf::Vector3f(GRADUS, 0, 0));
+            camera.addAngle(sf::Vector3f(-GRADUS, 0, 0));
         } 
         shader.setUniformArray("objects", objects, objectsLength);
         window.clear();
